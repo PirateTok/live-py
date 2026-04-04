@@ -4,17 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "piratetok-live-py"
-version = "0.1.0"
+version = "0.1.1"
 description = "TikTok Live WebSocket connector — real-time chat, gifts, likes, and viewer events. No authentication required."
 readme = "README.md"
-license = {text = "0BSD"}
+license = "0BSD"
 requires-python = ">=3.11"
 authors = [{name = "Zmole Cristian"}]
-keywords = ["tiktok", "live", "stream", "websocket", "protobuf"]
+keywords = ["tiktok", "tiktok-live", "live", "stream", "chat", "gifts", "websocket", "protobuf", "realtime", "piratetok"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -28,7 +27,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/PirateTok/live-py"
+Homepage = "https://piratetok.boats"
+Funding = "https://piratetok.boats/donate"
 Repository = "https://github.com/PirateTok/live-py"
 Issues = "https://github.com/PirateTok/live-py/issues"
 
