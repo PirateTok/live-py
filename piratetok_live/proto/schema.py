@@ -224,6 +224,18 @@ class WebcastGiftMessage(betterproto.Message):
     gift: "GiftStruct" = betterproto.message_field(15)
     send_type: int = betterproto.int64_field(17)
 
+    def is_combo_gift(self) -> bool:
+        return self.gift.type == 1 if self.gift else False
+
+    def is_streak_over(self) -> bool:
+        if not self.is_combo_gift():
+            return True
+        return self.repeat_end == 1
+
+    def diamond_total(self) -> int:
+        per_gift = self.gift.diamond_count if self.gift else 0
+        return per_gift * max(self.repeat_count, 1)
+
 
 @dataclass(eq=False, repr=False)
 class WebcastLikeMessage(betterproto.Message):

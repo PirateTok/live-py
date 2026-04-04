@@ -104,6 +104,12 @@ def decode(method: str, payload: bytes, room_id: str = "") -> List[TikTokEvent]:
     except (ValueError, KeyError, IndexError, TypeError):
         return [TikTokEvent(EventType.unknown, {"method": method, "payload": payload}, room_id)]
 
+    # Gift streak helpers — inject computed fields
+    if method == "WebcastGiftMessage" and isinstance(msg, schema.WebcastGiftMessage):
+        data["is_combo"] = msg.is_combo_gift()
+        data["is_streak_over"] = msg.is_streak_over()
+        data["diamond_total"] = msg.diamond_total()
+
     events: List[TikTokEvent] = [TikTokEvent(event_name, data, room_id)]
 
     # Sub-routing (int() cast: betterproto to_dict returns int64 as str)

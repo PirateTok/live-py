@@ -25,12 +25,24 @@ def on_gift(evt):
     nick = user.get("uniqueId") or user.get("nickname", "?")
     gift = evt.data.get("gift", {})
     name = gift.get("name", "unknown")
-    diamonds = int(gift.get("diamondCount", 0))
-    count = int(evt.data.get("repeatCount", 1))
+    is_combo = evt.data.get("is_combo", False)
 
-    gifts[nick]["count"] += count
-    gifts[nick]["diamonds"] += diamonds * count
-    print(f"  {nick} → {name} x{count} ({diamonds * count} diamonds)")
+    if is_combo:
+        count = int(evt.data.get("repeatCount", 1))
+        if not evt.data.get("is_streak_over", False):
+            print(f"  {nick} → {name} x{count} (streak ongoing)")
+            return
+        # streak ended — this is the final count
+        diamonds = int(evt.data.get("diamond_total", 0))
+        gifts[nick]["count"] += count
+        gifts[nick]["diamonds"] += diamonds
+        print(f"  {nick} → {name} x{count} — {diamonds} diamonds (streak ended)")
+    else:
+        # non-combo gift — single event = single gift
+        diamonds = int(gift.get("diamondCount", 0))
+        gifts[nick]["count"] += 1
+        gifts[nick]["diamonds"] += diamonds
+        print(f"  {nick} → {name} — {diamonds} diamonds")
 
 
 def print_summary():
