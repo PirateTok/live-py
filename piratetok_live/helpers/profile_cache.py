@@ -9,7 +9,7 @@ from ..errors import (
     ProfilePrivateError,
     ProfileScrapeError,
 )
-from .sigi import SigiProfile, scrape_profile
+from ..http.sigi import SigiProfile, scrape_profile
 
 _DEFAULT_TTL = 300.0  # 5 minutes
 _TTWID_TIMEOUT = 10.0
