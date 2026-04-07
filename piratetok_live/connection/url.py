@@ -4,9 +4,15 @@ import urllib.parse
 from ..http.ua import system_timezone
 
 
-def build_wss_url(cdn_host: str, room_id: str) -> str:
+def build_wss_url(
+    cdn_host: str,
+    room_id: str,
+    language: str = "en",
+    region: str = "US",
+) -> str:
     last_rtt = f"{100 + random.random() * 100:.3f}"
     tz = system_timezone()
+    browser_language = f"{language}-{region}"
 
     params = urllib.parse.urlencode({
         "version_code": "180800",
@@ -14,7 +20,7 @@ def build_wss_url(cdn_host: str, room_id: str) -> str:
         "cookie_enabled": "true",
         "screen_width": "1920",
         "screen_height": "1080",
-        "browser_language": "en-US",
+        "browser_language": browser_language,
         "browser_platform": "Linux x86_64",
         "browser_name": "Mozilla",
         "browser_version": "5.0 (X11)",
@@ -24,11 +30,11 @@ def build_wss_url(cdn_host: str, room_id: str) -> str:
         "sup_ws_ds_opt": "1",
         "update_version_code": "2.0.0",
         "compress": "gzip",
-        "webcast_language": "en",
+        "webcast_language": language,
         "ws_direct": "1",
         "aid": "1988",
         "live_id": "12",
-        "app_language": "en",
+        "app_language": language,
         "client_enter": "1",
         "room_id": room_id,
         "identity": "audience",

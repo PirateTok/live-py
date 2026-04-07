@@ -8,6 +8,7 @@ from .connection.wss import connect_wss
 from .errors import DeviceBlockedError
 from .events.types import EventType, TikTokEvent
 from .http.api import RoomIdResult, RoomInfo, check_online, fetch_room_info
+from .http.ua import system_language, system_region
 
 _DEFAULT_CDN = "webcast-ws.tiktok.com"
 _log = logging.getLogger("piratetok_live.client")
@@ -23,6 +24,8 @@ class TikTokLiveClient:
         self._proxy = ""
         self._user_agent: Optional[str] = None
         self._cookies: Optional[str] = None
+        self._language: Optional[str] = None
+        self._region: Optional[str] = None
         self._stop: Optional[asyncio.Event] = None
         self._listeners: Dict[str, List[Callable]] = {}
 
@@ -64,6 +67,16 @@ class TikTokLiveClient:
         self._user_agent = ua
         return self
 
+    def language(self, lang: str) -> "TikTokLiveClient":
+        """Override detected language (e.g. "pt", "ro")."""
+        self._language = lang
+        return self
+
+    def region(self, reg: str) -> "TikTokLiveClient":
+        """Override detected region (e.g. "BR", "RO")."""
+        self._region = reg
+        return self
+
     def cookies(self, cookies: str) -> "TikTokLiveClient":
         """Set session cookies for the WSS connection.
 
@@ -101,7 +114,9 @@ class TikTokLiveClient:
             ttwid = fetch_ttwid(
                 self._timeout, proxy=self._proxy, user_agent=self._user_agent,
             )
-            wss_url = build_wss_url(self._cdn_host, room.room_id)
+            lang = self._language if self._language else system_language()
+            reg = self._region if self._region else system_region()
+            wss_url = build_wss_url(self._cdn_host, room.room_id, lang, reg)
 
             is_device_blocked = False
             try:

@@ -12,6 +12,9 @@ _USER_AGENTS = (
 )
 
 _FALLBACK_TZ = "UTC"
+_FALLBACK_LANG = "en"
+_FALLBACK_REGION = "US"
+_SKIP_LOCALES = {"C", "POSIX", ""}
 
 
 def random_ua() -> str:
@@ -41,6 +44,43 @@ def system_timezone() -> str:
         return tz
 
     return _FALLBACK_TZ
+
+
+def system_locale() -> tuple:
+    """Detect system language and region from POSIX locale.
+
+    Tries LC_ALL, then LANG env var. Falls back to ("en", "US").
+    Returns (language, region) tuple.
+    """
+    for var in ("LC_ALL", "LANG"):
+        val = os.environ.get(var, "").strip()
+        if val in _SKIP_LOCALES:
+            continue
+        parsed = _parse_posix_locale(val)
+        if parsed is not None:
+            return parsed
+    return (_FALLBACK_LANG, _FALLBACK_REGION)
+
+
+def system_language() -> str:
+    """Detect system language code (e.g. "en", "ro", "pt")."""
+    return system_locale()[0]
+
+
+def system_region() -> str:
+    """Detect system region/country code (e.g. "US", "RO", "BR")."""
+    return system_locale()[1]
+
+
+def _parse_posix_locale(s: str) -> "tuple | None":
+    """Parse 'll_CC.encoding' / 'll_CC' / 'll-CC' into (lang, region)."""
+    base = s.split(".")[0]
+    parts = base.replace("-", "_").split("_", 1)
+    lang = parts[0].lower()
+    if len(lang) < 2:
+        return None
+    region = parts[1].upper() if len(parts) > 1 else _FALLBACK_REGION
+    return (lang, region)
 
 
 def _tz_from_python() -> "str | None":

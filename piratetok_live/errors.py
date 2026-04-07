@@ -38,3 +38,27 @@ class AgeRestrictedError(PirateTokError):
         super().__init__(
             "age-restricted stream: 18+ room — pass session cookies to fetch_room_info()"
         )
+
+
+class ProfilePrivateError(PirateTokError):
+    def __init__(self, username: str) -> None:
+        self.username = username
+        super().__init__(f"profile is private: @{username}")
+
+
+class ProfileNotFoundError(PirateTokError):
+    def __init__(self, username: str) -> None:
+        self.username = username
+        super().__init__(f"profile not found: @{username}")
+
+
+class ProfileScrapeError(PirateTokError):
+    def __init__(self, reason: str) -> None:
+        self.reason = reason
+        super().__init__(f"failed to scrape profile: {reason}")
+
+
+class ProfileError(PirateTokError):
+    def __init__(self, code: int) -> None:
+        self.code = code
+        super().__init__(f"profile fetch error: statusCode={code}")
