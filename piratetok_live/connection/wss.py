@@ -8,7 +8,7 @@ import websockets.exceptions as ws_exc
 from ..errors import DeviceBlockedError
 from ..events.router import decode
 from ..events.types import TikTokEvent
-from ..http.ua import random_ua
+from ..http.ua import random_ua, system_locale
 from ..proto.schema import WebcastPushFrame, WebcastResponse
 from .frames import build_ack, build_enter_room, build_heartbeat, decompress_if_gzipped
 
@@ -28,6 +28,7 @@ async def connect_wss(
     proxy: str = "",
     user_agent: Optional[str] = None,
     cookies: Optional[str] = None,
+    accept_language: Optional[str] = None,
 ) -> None:
     """Connect to TikTok WSS, stream events until stop_event or connection drops.
 
@@ -37,12 +38,15 @@ async def connect_wss(
     """
     ua = user_agent if user_agent else random_ua()
     cookie_header = f"ttwid={ttwid}; {cookies}" if cookies else f"ttwid={ttwid}"
+    if not accept_language:
+        lang, reg = system_locale()
+        accept_language = f"{lang}-{reg},{lang};q=0.9"
     headers = {
         "User-Agent": ua,
         "Cookie": cookie_header,
         "Origin": "https://www.tiktok.com",
         "Referer": "https://www.tiktok.com/",
-        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Language": accept_language,
         "Cache-Control": "no-cache",
     }
     ws_proxy = proxy if proxy else True  # True = auto-detect from env

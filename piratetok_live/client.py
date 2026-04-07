@@ -102,9 +102,14 @@ class TikTokLiveClient:
 
     async def connect(self) -> str:
         """Connect to TikTok Live with auto-reconnection. Returns room_id."""
+        lang = self._language if self._language else system_language()
+        reg = self._region if self._region else system_region()
+        accept_lang = f"{lang}-{reg},{lang};q=0.9"
+
         room = check_online(
             self._username, self._timeout,
             proxy=self._proxy, user_agent=self._user_agent,
+            language=lang, region=reg,
         )
         self._stop = asyncio.Event()
         self._emit(TikTokEvent(EventType.connected, {"room_id": room.room_id}, room.room_id))
@@ -114,8 +119,6 @@ class TikTokLiveClient:
             ttwid = fetch_ttwid(
                 self._timeout, proxy=self._proxy, user_agent=self._user_agent,
             )
-            lang = self._language if self._language else system_language()
-            reg = self._region if self._region else system_region()
             wss_url = build_wss_url(self._cdn_host, room.room_id, lang, reg)
 
             is_device_blocked = False
@@ -129,6 +132,7 @@ class TikTokLiveClient:
                     proxy=self._proxy,
                     user_agent=self._user_agent,
                     cookies=self._cookies,
+                    accept_language=accept_lang,
                 )
             except DeviceBlockedError:
                 is_device_blocked = True

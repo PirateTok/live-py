@@ -10,7 +10,7 @@ from ..errors import (
     TikTokBlockedError,
     UserNotFoundError,
 )
-from .ua import random_ua, system_timezone
+from .ua import random_ua, system_locale, system_timezone
 
 
 class RoomIdResult:
@@ -68,16 +68,23 @@ def check_online(
     timeout: float = 10.0,
     proxy: str = "",
     user_agent: Optional[str] = None,
+    language: Optional[str] = None,
+    region: Optional[str] = None,
 ) -> RoomIdResult:
     """Check if a TikTok user is currently live. Returns room ID."""
     ua = user_agent if user_agent else random_ua()
     clean = username.strip().lstrip("@")
+    sys_lang, sys_reg = system_locale()
+    lang = language if language else sys_lang
+    reg = region if region else sys_reg
+    browser_lang = f"{lang}-{reg}"
     params = urllib.parse.urlencode({
         "aid": "1988",
         "app_name": "tiktok_web",
         "device_platform": "web_pc",
-        "app_language": "en",
-        "browser_language": "en-US",
+        "app_language": lang,
+        "browser_language": browser_lang,
+        "region": reg,
         "user_is_login": "false",
         "sourceType": "54",
         "staleTime": "600000",
@@ -126,16 +133,22 @@ def fetch_room_info(
     cookies: str = "",
     proxy: str = "",
     user_agent: Optional[str] = None,
+    language: Optional[str] = None,
+    region: Optional[str] = None,
 ) -> RoomInfo:
     """Fetch room metadata. Needs cookies for 18+ rooms."""
     ua = user_agent if user_agent else random_ua()
     tz = system_timezone()
+    sys_lang, sys_reg = system_locale()
+    lang = language if language else sys_lang
+    reg = region if region else sys_reg
+    browser_lang = f"{lang}-{reg}"
     params = urllib.parse.urlencode({
         "aid": "1988",
         "app_name": "tiktok_web",
         "device_platform": "web_pc",
-        "app_language": "en",
-        "browser_language": "en-US",
+        "app_language": lang,
+        "browser_language": browser_lang,
         "browser_name": "Mozilla",
         "browser_online": "true",
         "browser_platform": "Linux x86_64",
@@ -143,7 +156,7 @@ def fetch_room_info(
         "screen_height": "1080",
         "screen_width": "1920",
         "tz_name": tz,
-        "webcast_language": "en",
+        "webcast_language": lang,
         "room_id": room_id,
     })
     url = f"https://webcast.tiktok.com/webcast/room/info/?{params}"

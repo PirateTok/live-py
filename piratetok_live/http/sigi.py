@@ -8,7 +8,7 @@ from ..errors import (
     ProfilePrivateError,
     ProfileScrapeError,
 )
-from .ua import random_ua
+from .ua import random_ua, system_locale
 
 _SIGI_MARKER = 'id="__UNIVERSAL_DATA_FOR_REHYDRATION__"'
 
@@ -104,12 +104,15 @@ def scrape_profile(
         handlers.append(urllib.request.ProxyHandler({"https": proxy, "http": proxy}))
     opener = urllib.request.build_opener(*handlers)
 
+    lang, reg = system_locale()
+    accept_lang = f"{lang}-{reg},{lang};q=0.9"
+
     req = urllib.request.Request(
         f"https://www.tiktok.com/@{clean}",
         headers={
             "User-Agent": ua,
             "Cookie": cookie_header,
-            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Language": accept_lang,
         },
     )
     with opener.open(req, timeout=timeout) as resp:
