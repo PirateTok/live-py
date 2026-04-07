@@ -34,6 +34,7 @@ Issues = "https://github.com/PirateTok/live-py/issues"
 
 [project.optional-dependencies]
 dev = ["mypy", "ruff"]
+test = ["pytest"]
 
 [tool.setuptools.packages.find]
 include = ["piratetok_live*"]

@@ -103,6 +103,18 @@ python examples/stream_info.py <username>      # fetch room metadata + stream UR
 python examples/gift_tracker.py <username>     # track gifts with diamond totals
 ```
 
+## Replay testing
+
+Deterministic cross-lib validation against binary WSS captures. Requires testdata from a separate repo:
+
+```bash
+git clone https://github.com/PirateTok/live-testdata ../live-testdata
+pip install -e ".[test]"
+pytest tests/test_replay.py -v
+```
+
+Tests skip gracefully if testdata is not found. You can also set `PIRATETOK_TESTDATA` to point to a custom location.
+
 ## License
 
 0BSD
