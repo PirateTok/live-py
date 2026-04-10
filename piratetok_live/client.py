@@ -24,6 +24,7 @@ class TikTokLiveClient:
         self._proxy = ""
         self._user_agent: Optional[str] = None
         self._cookies: Optional[str] = None
+        self._compress = True
         self._language: Optional[str] = None
         self._region: Optional[str] = None
         self._stop: Optional[asyncio.Event] = None
@@ -77,6 +78,17 @@ class TikTokLiveClient:
         self._region = reg
         return self
 
+    def compress(self, enabled: bool) -> "TikTokLiveClient":
+        """Toggle gzip compression on the WSS connection.
+
+        When enabled (default), the server sends gzip-compressed frames.
+        When disabled, the ``compress`` URL param is set to an empty string,
+        requesting uncompressed frames. The decode layer handles both
+        transparently.
+        """
+        self._compress = enabled
+        return self
+
     def cookies(self, cookies: str) -> "TikTokLiveClient":
         """Set session cookies for the WSS connection.
 
@@ -119,7 +131,10 @@ class TikTokLiveClient:
             ttwid = fetch_ttwid(
                 self._timeout, proxy=self._proxy, user_agent=self._user_agent,
             )
-            wss_url = build_wss_url(self._cdn_host, room.room_id, lang, reg)
+            wss_url = build_wss_url(
+                self._cdn_host, room.room_id, lang, reg,
+                compress=self._compress,
+            )
 
             is_device_blocked = False
             try:

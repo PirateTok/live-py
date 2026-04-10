@@ -405,3 +405,42 @@ def test_replay_happyhappygaltv() -> None:
 
 def test_replay_fox4newsdallasfortworth() -> None:
     _run_capture_test("fox4newsdallasfortworth")
+
+
+# -- raw (uncompressed) capture variants --
+# Same manifests, same assertions — payloads have gzip stripped from
+# PushFrame but produce identical decode output.
+
+
+def _run_raw_capture_test(name: str) -> None:
+    testdata = _find_testdata()
+    if testdata is None:
+        pytest.skip(
+            f"no testdata (set PIRATETOK_TESTDATA or clone live-testdata)"
+        )
+
+    cap = testdata / "captures" / f"{name}_raw.bin"
+    man = _manifest_path(testdata, name)
+
+    if not cap.exists():
+        pytest.skip(f"raw capture not found at {cap}")
+    if not man.exists():
+        pytest.skip(f"manifest not found at {man}")
+
+    manifest = json.loads(man.read_text())
+    frames = _read_capture(cap)
+    result = _replay(frames)
+
+    _assert_replay(f"{name}_raw", result, manifest)
+
+
+def test_replay_raw_calvinterest6() -> None:
+    _run_raw_capture_test("calvinterest6")
+
+
+def test_replay_raw_happyhappygaltv() -> None:
+    _run_raw_capture_test("happyhappygaltv")
+
+
+def test_replay_raw_fox4newsdallasfortworth() -> None:
+    _run_raw_capture_test("fox4newsdallasfortworth")

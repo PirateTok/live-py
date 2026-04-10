@@ -29,7 +29,7 @@ async def main():
     @client.on(EventType.like)
     def on_like(evt):
         nick = evt.data.get("user", {}).get("nickname", "?")
-        print(f"[like] {nick} ({evt.data.get('totalLikes')} total)")
+        print(f"[like] {nick} ({evt.data.get('total')} total)")
 
     # Connect — handles auth, room resolution, WSS, heartbeat, and reconnection
     await client.connect()
@@ -40,7 +40,7 @@ asyncio.run(main())
 ## Install
 
 ```
-pip install piratetok-live
+pip install piratetok-live-py
 ```
 
 Requires Python >= 3.11.
@@ -68,7 +68,7 @@ Requires Python >= 3.11.
 - **Auto-reconnection** — stale detection, exponential backoff, self-healing auth
 - **Proxy support** — `.proxy(url)` builder, applies to HTTP + WSS
 - **Enriched User data** — badges, gifter level, moderator status, follow info, fan club
-- **Sub-routed convenience events** — `follow`, `share`, `join`, `liveEnded`
+- **Sub-routed convenience events** — `follow`, `share`, `join`, `live_ended`
 - **2 runtime deps** — `betterproto` + `websockets`
 
 ## Configuration
@@ -79,8 +79,26 @@ client = (TikTokLiveClient("username_here")
     .timeout(15)
     .max_retries(10)
     .stale_timeout(90)
-    .proxy("socks5://127.0.0.1:1080"))
+    .proxy("socks5://127.0.0.1:1080")
+    .user_agent("Mozilla/5.0 ...")
+    .cookies("sessionid=abc; sid_tt=abc")
+    .language("pt")
+    .region("BR")
+    .compress(False))
 ```
+
+| Method | Default | Description |
+|:-------|:--------|:------------|
+| `.cdn_eu()` / `.cdn_us()` / `.cdn(host)` | Global CDN | WebSocket CDN endpoint |
+| `.timeout(seconds)` | `10` | HTTP request timeout in seconds |
+| `.max_retries(n)` | `5` | Maximum reconnection attempts before giving up |
+| `.stale_timeout(seconds)` | `60` | Seconds without data before triggering a reconnect |
+| `.proxy(url)` | None | HTTP/HTTPS/SOCKS5 proxy for all HTTP + WSS traffic |
+| `.user_agent(ua)` | Random from pool | Override the user agent (rotated automatically on reconnect by default) |
+| `.cookies(cookies)` | None | Append session cookies alongside ttwid in the WSS cookie header |
+| `.language(lang)` | System detected | Override the language sent in WSS params (e.g. `"pt"`, `"ro"`) |
+| `.region(reg)` | System detected | Override the region sent in WSS params (e.g. `"BR"`, `"RO"`) |
+| `.compress(enabled)` | `True` | Disable gzip compression for WSS payloads (trades bandwidth for CPU) |
 
 ## Room info (optional, separate call)
 
@@ -101,6 +119,8 @@ python examples/basic_chat.py <username>       # connect + print chat events
 python examples/online_check.py <username>     # check if user is live
 python examples/stream_info.py <username>      # fetch room metadata + stream URLs
 python examples/gift_tracker.py <username>     # track gifts with diamond totals
+python examples/gift_streak.py <username>      # track gifts with GiftStreakTracker deltas
+python examples/profile_lookup.py [username]   # fetch profile via SIGI scrape with caching
 ```
 
 ## Replay testing

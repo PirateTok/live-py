@@ -9,6 +9,7 @@ def build_wss_url(
     room_id: str,
     language: str = "en",
     region: str = "US",
+    compress: bool = True,
 ) -> str:
     last_rtt = f"{100 + random.random() * 100:.3f}"
     tz = system_timezone()
@@ -29,7 +30,7 @@ def build_wss_url(
         "app_name": "tiktok_web",
         "sup_ws_ds_opt": "1",
         "update_version_code": "2.0.0",
-        "compress": "gzip",
+        "compress": "gzip" if compress else "",
         "webcast_language": language,
         "ws_direct": "1",
         "aid": "1988",
