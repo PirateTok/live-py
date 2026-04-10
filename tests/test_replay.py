@@ -118,31 +118,20 @@ def _find_testdata() -> Optional[Path]:
         if p.exists():
             return p
 
-    # relative to live-py/: ../live-testdata
-    relative = Path(__file__).resolve().parent.parent.parent / "live-testdata"
-    if (relative / "captures").exists():
-        return relative
-
-    # dev fallback: ../../live-rs/captures/ (captures live alongside manifests)
-    dev = Path(__file__).resolve().parent.parent.parent / "live-rs" / "captures"
-    if dev.exists():
-        return dev.parent
+    # testdata/ in repo root
+    local = Path(__file__).resolve().parent.parent / "testdata"
+    if (local / "captures").exists():
+        return local
 
     return None
 
 
 def _capture_path(testdata: Path, name: str) -> Path:
-    in_testdata = testdata / "captures" / f"{name}.bin"
-    if in_testdata.exists():
-        return in_testdata
-    return testdata / f"{name}.bin"
+    return testdata / "captures" / f"{name}.bin"
 
 
 def _manifest_path(testdata: Path, name: str) -> Path:
-    in_testdata = testdata / "manifests" / f"{name}.json"
-    if in_testdata.exists():
-        return in_testdata
-    return testdata / "captures" / "manifests" / f"{name}.json"
+    return testdata / "manifests" / f"{name}.json"
 
 
 # -- frame reader --

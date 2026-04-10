@@ -108,7 +108,7 @@ python examples/gift_tracker.py <username>     # track gifts with diamond totals
 Deterministic cross-lib validation against binary WSS captures. Requires testdata from a separate repo:
 
 ```bash
-git clone https://github.com/PirateTok/live-testdata ../live-testdata
+git clone https://github.com/PirateTok/live-testdata testdata
 pip install -e ".[test]"
 pytest tests/test_replay.py -v
 ```
