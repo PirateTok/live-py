@@ -38,3 +38,8 @@ test = ["pytest"]
 
 [tool.setuptools.packages.find]
 include = ["piratetok_live*"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: live network tests gated by PIRATETOK_LIVE_TEST_* env vars",
+]
