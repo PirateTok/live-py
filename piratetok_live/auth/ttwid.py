@@ -1,19 +1,6 @@
-import http.cookiejar
-import urllib.request
 from typing import Optional
 
-from ..http.ua import random_ua
-
-_BROWSER_HEADERS = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate",
-    "Upgrade-Insecure-Requests": "1",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-User": "?1",
-}
+from curl_cffi import requests as cffi_requests
 
 
 def fetch_ttwid(
@@ -24,33 +11,40 @@ def fetch_ttwid(
 ) -> str:
     """Fetch a fresh ttwid cookie via anonymous GET to a TikTok profile page.
 
-    The homepage (``https://www.tiktok.com/``) stopped reliably minting ttwid
-    in late 2026 — TikTok's edge returns ``X-TT-System-Error: 3`` and refuses
-    to set the cookie. Profile pages (``/@{username}``) still mint it
-    consistently. We try the target user's profile first, then fall back to
-    ``/@tiktok`` (canonical first-party page).
+    Uses ``curl_cffi`` to impersonate Chrome's TLS/HTTP fingerprint. Plain
+    ``urllib`` and ``requests`` get fingerprinted (JA3/JA4) by TikTok's edge
+    on Windows and served a challenge page (200 OK with no cookies and
+    ``X-TT-System-Error: 3`` header) — Linux happens to slip through but
+    Windows consistently hits the filter.
+
+    The homepage (``/``) stopped reliably minting ttwid in late 2026; profile
+    pages still mint it. We try the target user's profile first (warms the
+    edge for the upcoming WSS connect), then fall back to ``/@tiktok``.
 
     Args:
         timeout: HTTP request timeout in seconds.
         proxy: Optional proxy URL (HTTP/HTTPS/SOCKS5).
-        user_agent: Custom user agent. When None, picks a random UA from pool.
-        username: Target streamer's username. When given, ttwid is fetched from
-            their profile page (warming the edge for the upcoming WSS connect).
+        user_agent: Custom user agent. When None, ``curl_cffi`` uses the UA
+            matching its impersonated browser (recommended — overriding the
+            UA breaks fingerprint consistency and may re-trigger anti-bot).
+        username: Target streamer's username. When given, ttwid is fetched
+            from their profile page.
     """
-    ua = user_agent if user_agent else random_ua()
-
     candidates = []
     if username:
         candidates.append(f"https://www.tiktok.com/@{username}")
     candidates.append("https://www.tiktok.com/@tiktok")
 
+    proxies = {"http": proxy, "https": proxy} if proxy else None
+    headers = {"User-Agent": user_agent} if user_agent else None
+
     last_error: Optional[Exception] = None
     for url in candidates:
         try:
-            value = _try_fetch(url, ua, timeout, proxy)
+            value = _try_fetch(url, timeout, proxies, headers)
             if value:
                 return value
-        except Exception as e:  # noqa: BLE001 — we re-raise after all candidates exhausted
+        except Exception as e:  # noqa: BLE001 — re-raised after exhausting candidates
             last_error = e
             continue
 
@@ -61,23 +55,23 @@ def fetch_ttwid(
         ) from last_error
     raise RuntimeError(
         "ttwid: no bootstrap URL returned a ttwid cookie. "
-        "TikTok likely served a challenge page (IP/region block or fingerprint flag)."
+        "TikTok served a challenge page despite TLS impersonation — "
+        "your IP is likely flagged."
     )
 
 
-def _try_fetch(url: str, ua: str, timeout: float, proxy: str) -> Optional[str]:
-    jar = http.cookiejar.CookieJar()
-    handlers: list = [urllib.request.HTTPCookieProcessor(jar)]
-    if proxy:
-        handlers.append(urllib.request.ProxyHandler({"https": proxy, "http": proxy}))
-    opener = urllib.request.build_opener(*handlers)
-
-    headers = dict(_BROWSER_HEADERS)
-    headers["User-Agent"] = ua
-    req = urllib.request.Request(url, headers=headers)
-    opener.open(req, timeout=timeout).close()
-
-    for cookie in jar:
-        if cookie.name == "ttwid":
-            return cookie.value
-    return None
+def _try_fetch(
+    url: str,
+    timeout: float,
+    proxies: Optional[dict],
+    headers: Optional[dict],
+) -> Optional[str]:
+    resp = cffi_requests.get(
+        url,
+        impersonate="chrome",
+        timeout=timeout,
+        proxies=proxies,
+        headers=headers,
+        allow_redirects=True,
+    )
+    return resp.cookies.get("ttwid")
