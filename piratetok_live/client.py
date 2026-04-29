@@ -130,6 +130,7 @@ class TikTokLiveClient:
         while not self._stop.is_set():
             ttwid = fetch_ttwid(
                 self._timeout, proxy=self._proxy, user_agent=self._user_agent,
+                username=self._username,
             )
             wss_url = build_wss_url(
                 self._cdn_host, room.room_id, lang, reg,
